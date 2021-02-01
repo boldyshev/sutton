@@ -13,7 +13,7 @@ import multiprocessing as mp
 import numpy as np
 import matplotlib.pyplot as plt
 
-from stationary_greedy import argmax, percent, plot
+from fig2_2 import argmax, percent, plot
 
 
 def realistic(steps, eps, alpha):
