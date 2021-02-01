@@ -5,7 +5,7 @@
 The code in procedural style is redundant, but runs faster as function calls in python take some time.
 It becomes significant in exercise 2.11, where you have to make 200 000 steps for each run.
 
-OOP implementation is included for comparison. There is a ['../oop/demo.ipynb'](oop/demo.ipynb) jupyter notebook for demonstration of Bandit objects usage.
+OOP implementation is included for comparison. There is a [demo.ipynb](oop/demo.ipynb) jupyter notebook for demonstration of Bandit objects usage.
 
 ### Figure 2.2
 
