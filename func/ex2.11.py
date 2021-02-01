@@ -193,10 +193,10 @@ if __name__ == '__main__':
     x_ticks = ['1/128', '1/64', '1/32', '1/16', '1/8', '1/4', '1/2', '1', '2', '4']
     # indices for the slices of parameter values
     param_slices = {'eps_greedy': (0, 6),
-                    'const_eps_greedy': (0, 11),
+                    'const_eps_greedy': (0, 6),
                     'grad_bline': (2, 11),
                     'ucb': (3, 11),
-                    'greedy': (5, 11)}
+                    'optimistic_greedy': (5, 11)}
     # dictionary to store obtained reward values for particular method
     rewards = defaultdict(list)
 
@@ -213,13 +213,11 @@ if __name__ == '__main__':
 
             (start, stop) = _slice
             for param, x in zip(params[start:stop], x_ticks[start:stop]):
-                print(f'     {x}')
+                print(f'{x}', end=' ')
                 # mean reward across all runs
-                arr = np.array(pool.starmap(locals()[method], [(steps, param)] * runs))
-                np.save('arr.npy', arr)
-                # arr = np.array(pool.starmap(locals()[method], [(steps, param)] * runs))[100000:].mean(axis=0)
+                arr = np.array(pool.starmap(locals()[method], [(steps, param)] * runs)).mean(axis=0)
                 # overall mean reward
-                rewards[method].append(arr.mean())
+                rewards[method].append(arr[100000:].mean())
 
             t2 = time.perf_counter()
             print(f'done in {round(t2 - t1, 3)} sec')
@@ -230,10 +228,10 @@ if __name__ == '__main__':
     # plotting
     # labels and colors
     labels = (r'$\varepsilon$-greedy, $\varepsilon$',
-              r'constant step $\varepsilon$-greedy $\alpha=0.1$, $\varepsilon$',
+              'constant step\n' r'$\varepsilon$-greedy $\alpha=0.1$, $\varepsilon$',
               r'gradient bandit, $\alpha$',
               r'UCB, $c$',
-              'greedy with optimistic\n  init ' r'$\alpha=0.1, Q_0$')
+              'optimistic greedy\n' r'$\alpha=0.1, Q_0$')
     ylabel = 'Average reward over\n last 100 000 steps'
     xlabel = r'$\varepsilon, \alpha, c, Q_0$'
     colors = ('red', 'purple', 'green', 'blue', 'black')

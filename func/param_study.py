@@ -119,7 +119,7 @@ def ucb(steps, c):
     return rewards
 
 
-def greedy(steps, q0):
+def optimistic_greedy(steps, q0):
     """Stationary 10-armed bandit problem.
     Constant step-size greedy method
 
@@ -155,7 +155,7 @@ if __name__ == '__main__':
     param_slices = {'eps_greedy': (0, 6),
                     'grad_bline': (2, 11),
                     'ucb': (3, 11),
-                    'greedy': (5, 11)}
+                    'optimistic_greedy': (5, 11)}
     # dictionary to store obtained reward values for particular method
     rewards = defaultdict(list)
 
@@ -172,7 +172,7 @@ if __name__ == '__main__':
 
             (start, stop) = _slice
             for param, x in zip(params[start:stop], x_ticks[start:stop]):
-                print(f'     {x}')
+                print(f'{x}', end=' ')
                 # mean reward across all runs
                 arr = np.array(pool.starmap(locals()[method], [(steps, param)] * runs)).mean(axis=0)
                 # overall mean reward
@@ -189,7 +189,7 @@ if __name__ == '__main__':
     labels = (r'$\varepsilon$-greedy, $\varepsilon$',
               r'gradient bandit, $\alpha$',
               r'UCB, $c$',
-              'greedy with optimistic\n  init ' r'$\alpha=0.1, Q_0$')
+              'optimistic greedy\n' r'$\alpha=0.1, Q_0$')
     ylabel = 'Average reward over\n first 1000 steps'
     xlabel = r'$\varepsilon, \alpha, c, Q_0$'
     colors = ('red', 'green', 'blue', 'black')

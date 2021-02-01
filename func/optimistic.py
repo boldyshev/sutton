@@ -72,24 +72,28 @@ if __name__ == '__main__':
 
     steps = int(1e3)
     runs = int(2e3)
-    # Using multiprocessing to speed up the execution
-    mp.set_start_method('spawn')            # comment this line if run on windows or OS X  (default method)
+
+    # comment this line if run on windows or OS X (default method)
+    mp.set_start_method('spawn')
 
     print('Optimistic vs realistic started...')
-    t1 = time.perf_counter()                # measure the execution time
+    t1 = time.perf_counter()
+
     with mp.Pool(mp.cpu_count()) as pool:
         real = np.array(pool.starmap(realistic, [(steps, 0.1, 0.1)] * runs))
         opt = np.array(pool.starmap(optimistic, [(steps, 0.1)] * runs))
-    t2 = time.perf_counter()                # measure execution time
+
+    t2 = time.perf_counter()
     print(f'Done in {round(t2 - t1, 3)} sec')
 
     # percentage of optimal actions
     real = percent(real)
     opt = percent(opt)
 
+    # plotting
     labels = ('Realistic, greedy\n' r'$Q_1=0, \varepsilon=0$',
               r'Optimistic, $\varepsilon$-greedy' '\n' r'$Q_1=5, \varepsilon=0.1$')
 
-    plot((real, opt), labels, '% Optimal action', colors=('grey', 'dodgerblue',))
+    plot((real, opt), labels, '% Optimal action', colors=('grey', 'dodgerblue'))
 
     plt.show()

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Richard S. Sutton and Andrew G. Barto - Reinforcement Learning: An Introduction
 Second edition, 2018
 
@@ -176,16 +177,12 @@ if __name__ == '__main__':
 
     # transpose the arrays to shape (2, 2000, 1000)
     result = eps01, eps001, greedy
-    result = [np.transpose(i, (1, 0, 2)) for i in result]
+    # result = [np.transpose(i, (1, 0, 2)) for i in result]
 
-    # detach rewards and optimals
-    rewards = []
-    optimals = []
-    for pair in result:
-        # get the average rewards
-        rewards.append(pair[0].mean(axis=0))
-        # get the optimal actions percentage
-        optimals.append(percent(pair[1]))
+    # get the average rewards
+    rewards = [pair[:, 0, :].mean(axis=0) for pair in result]
+    # get the percentage of the optimal actions
+    optimals = [percent(pair[:, 1, :]) for pair in result]
 
     # plotting
     labels = (r'$\varepsilon=0.1$',
