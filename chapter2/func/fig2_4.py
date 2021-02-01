@@ -12,7 +12,7 @@ from math import log
 import numpy as np
 import matplotlib.pyplot as plt
 
-from stationary_greedy import argmax, plot
+from fig2_2 import argmax, plot
 
 
 def ucb(steps, c):
