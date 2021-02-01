@@ -12,7 +12,7 @@ import multiprocessing as mp
 import numpy as np
 import matplotlib.pyplot as plt
 
-from stationary_greedy import argmax, percent, plot
+from fig2_2 import argmax, percent, plot
 
 
 def grad_no_bline(steps, alpha):

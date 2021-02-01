@@ -12,4 +12,4 @@ OOP implementation is included for comparison. There is a [demo.ipynb](oop/demo.
 ![fig2.2](figs/sample_average_rewards.svg)
 ![fig2.21](figs/sample_average_optimals.svg)
 
-[fig2.2.py](func/fig2.2.py)
+[fig2_2.py](func/fig2_2.py)

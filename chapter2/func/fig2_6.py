@@ -13,11 +13,11 @@ from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 
-from stationary_greedy import argmax, plot
+from fig2_2 import argmax, plot
 
 
 def eps_greedy(steps, eps):
-    """Nonstationary 10-armed bandit problem.
+    """Stationary 10-armed bandit problem.
     Sample-average epsilon-greedy method.
 
     :param steps: Number of timesteps
@@ -44,45 +44,11 @@ def eps_greedy(steps, eps):
         # update estimated values
         q_est[action] += (rewards[-1] - q_est[action]) / action_counts[action]
 
-        # introduce true value fluctuations
-        q += np.random.normal(0, 0.01, size=10)
-    return rewards
-
-
-def const_eps_greedy(steps, eps):
-    """Nonstationary 10-armed bandit problem.
-    Constant step-size (0.1) epsilon-greedy method.
-
-    :param steps: Number of timesteps
-    :type steps: int
-    :param eps: The probability of choosing the exploration vs exploitation.
-    :type eps: float
-    :return: Rewards
-    :rtype: list
-    """
-    q = list(np.random.normal(0, 1, size=10))           # true action values
-    q_est = [0] * 10                                    # estimated action values
-    rewards = list()                                    # rewards on each step
-
-    for i in range(steps):
-        # choose an action
-        if random.random() < 1 - eps:                   # exploitation
-            action = argmax(q_est)
-        else:                                           # exploration
-            action = random.randint(0, 9)
-        rewards.append(np.random.normal(q[action], 1))  # get action normally distributed reward
-
-        # update estimated values
-        q_est[action] += (rewards[-1] - q_est[action]) * 0.1
-
-        # introduce true value fluctuations
-        q += np.random.normal(0, 0.01, size=10)
     return rewards
 
 
 def grad_bline(steps, alpha):
-    """Nonstationary 10-armed bandit problem.
-
+    """Stationary 10-armed bandit problem.
     Gradient Bandit Algorithm with baseline.
 
     :param steps: Number of timesteps
@@ -116,8 +82,6 @@ def grad_bline(steps, alpha):
         h_exps_sum = sum(h_exps)
         p = [x / h_exps_sum for x in h_exps]
 
-        # introduce true value fluctuations
-        q += np.random.normal(0, 0.01, size=10)
     return rewards
 
 
@@ -152,12 +116,10 @@ def ucb(steps, c):
         # update estimated values
         q_est[action] += (rewards[-1] - q_est[action]) / action_counts[action]
 
-        # introduce true value fluctuations
-        q += np.random.normal(0, 0.01, size=10)
     return rewards
 
 
-def greedy(steps, q0):
+def optimistic_greedy(steps, q0):
     """Stationary 10-armed bandit problem.
     Constant step-size greedy method
 
@@ -177,15 +139,13 @@ def greedy(steps, q0):
         rewards.append(np.random.normal(q[action], 1))          # get action normally distributed reward
         q_est[action] += (rewards[-1] - q_est[action]) * 0.1    # update estimated values
 
-        # introduce true value fluctuations
-        q += np.random.normal(0, 0.01, size=10)
     return rewards
 
 
 if __name__ == '__main__':
 
     runs = int(2e3)
-    steps = int(2e5)
+    steps = int(1e3)
 
     # parameter values (powers of 2)
     params = [2 ** i for i in range(-7, 3)]
@@ -193,7 +153,6 @@ if __name__ == '__main__':
     x_ticks = ['1/128', '1/64', '1/32', '1/16', '1/8', '1/4', '1/2', '1', '2', '4']
     # indices for the slices of parameter values
     param_slices = {'eps_greedy': (0, 6),
-                    'const_eps_greedy': (0, 6),
                     'grad_bline': (2, 11),
                     'ucb': (3, 11),
                     'optimistic_greedy': (5, 11)}
@@ -204,7 +163,7 @@ if __name__ == '__main__':
     mp.set_start_method('spawn')
 
     # parallel execution
-    with mp.Pool(16) as pool:
+    with mp.Pool(mp.cpu_count()) as pool:
         t0 = time.perf_counter()
         for method, _slice in param_slices.items():
 
@@ -217,7 +176,7 @@ if __name__ == '__main__':
                 # mean reward across all runs
                 arr = np.array(pool.starmap(locals()[method], [(steps, param)] * runs)).mean(axis=0)
                 # overall mean reward
-                rewards[method].append(arr[100000:].mean())
+                rewards[method].append(arr.mean())
 
             t2 = time.perf_counter()
             print(f'done in {round(t2 - t1, 3)} sec')
@@ -228,13 +187,12 @@ if __name__ == '__main__':
     # plotting
     # labels and colors
     labels = (r'$\varepsilon$-greedy, $\varepsilon$',
-              'constant step\n' r'$\varepsilon$-greedy $\alpha=0.1$, $\varepsilon$',
               r'gradient bandit, $\alpha$',
               r'UCB, $c$',
               'optimistic greedy\n' r'$\alpha=0.1, Q_0$')
-    ylabel = 'Average reward over\n last 100 000 steps'
+    ylabel = 'Average reward over\n first 1000 steps'
     xlabel = r'$\varepsilon, \alpha, c, Q_0$'
-    colors = ('red', 'purple', 'green', 'blue', 'black')
+    colors = ('red', 'green', 'blue', 'black')
 
     # x axis values to correspond with parameter slices
     x = [list(range(10)[start:stop]) for (start, stop) in param_slices.values()]
