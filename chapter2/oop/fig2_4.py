@@ -25,8 +25,8 @@ if __name__ == '__main__':
     t1 = time.perf_counter()
 
     with mp.Pool(mp.cpu_count()) as pool:
-        ucb = np.array(pool.map(UCB(c=2).stationary, args))[:, 0, :]
-        greedy = np.array(pool.map(EpsGreedy(eps=0.1).stationary, args))[:, 0, :]
+        ucb = np.array(pool.map(UCB(c=2).rewards_stat, args))
+        greedy = np.array(pool.map(EpsGreedy(eps=0.1).rewards_stat, args))
 
     t2 = time.perf_counter()
     print(f'Done in {round(t2 - t1, 3)} sec')
