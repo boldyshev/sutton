@@ -214,7 +214,7 @@ if __name__ == '__main__':
                 print(f'{x}', end=' ')
                 # mean reward across all runs
                 arr = np.array(pool.starmap(locals()[method], [(steps, param)] * runs)).mean(axis=0)
-                # overall mean reward
+                # overall mean reward for the last 100 000 steps
                 rewards[method].append(arr[100000:].mean())
 
             t2 = time.perf_counter()

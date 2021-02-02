@@ -54,7 +54,7 @@ if __name__ == '__main__':
                 print(f'{x}', end=' ')
                 # mean reward over all runs
                 arr = np.array(pool.map(methods(param)[method], args)).mean(axis=0)
-                # mean reward over all steps
+                # mean reward over last 100 000 steps
                 rewards[method].append(arr[100000:].mean())
 
             t2 = time.perf_counter()
