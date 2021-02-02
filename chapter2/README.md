@@ -54,4 +54,4 @@ OOP implementation is included for comparison. There is a [demo.ipynb](oop/demo.
 
 ![ex2_11](figs/ex2_11.svg)
 
-[fig2_11.py](func/ex2_11.py)
+[ex2_11.py](func/ex2_11.py)
