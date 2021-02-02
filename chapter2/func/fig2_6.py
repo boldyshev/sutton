@@ -1,7 +1,5 @@
-"""Richard S. Sutton and Andrew G. Barto - Reinforcement Learning: An Introduction
-Second edition, 2018
-
-Chapter 2.10 (Summary), A parameter study of nonstationary case,
+#!/usr/bin/env python3
+"""Chapter 2.10 (Summary), A parameter study of nonstationary case,
 page 44
 """
 import time

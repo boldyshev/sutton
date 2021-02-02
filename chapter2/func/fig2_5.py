@@ -1,7 +1,5 @@
-"""Richard S. Sutton and Andrew G. Barto - Reinforcement Learning: An Introduction
-Second edition, 2018
-
-Chapter 2.8, Gradient Bandit Algorithms,
+#!/usr/bin/env python3
+"""Chapter 2.8, Gradient Bandit Algorithms,
 page 35
 """
 import time

@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""Richard S. Sutton and Andrew G. Barto - Reinforcement Learning: An Introduction
-Second edition, 2018
-
-Chapter 2.3, The 10-armed tesbed,
+"""Chapter 2.3, The 10-armed tesbed,
 action-value epsilon-greedy methods,
 page 29
 """
