@@ -1,7 +1,5 @@
-"""Richard S. Sutton and Andrew G. Barto - Reinforcement Learning: An Introduction
-Second edition, 2018
-
-Chapter 2.7, Upper-Confidence-Bound Action Selection,
+#!/usr/bin/env python3
+"""Chapter 2.7, Upper-Confidence-Bound Action Selection,
 page 35
 """
 import time

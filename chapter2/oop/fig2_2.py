@@ -1,7 +1,5 @@
-"""Richard S. Sutton and Andrew G. Barto - Reinforcement Learning: An Introduction
-Second edition, 2018
-
-Chapter 2.3, The 10-armed testbed,
+#!/usr/bin/env python3
+"""Chapter 2.3, The 10-armed testbed,
 action-value greedy method,
 page 29"""
 

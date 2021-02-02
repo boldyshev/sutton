@@ -1,7 +1,5 @@
-"""Richard S. Sutton and Andrew G. Barto - Reinforcement Learning: An Introduction
-Second edition, 2018
-
-Chapter 2.6, The 10-armed tesbed, the reproduction of the experiment,
+#!/usr/bin/env python3
+"""Chapter 2.6, The 10-armed tesbed, the reproduction of the experiment,
 stationary, exponential recency-weighted average method (constant step-size),
 optimistic initial values,
 page 34

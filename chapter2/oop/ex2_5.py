@@ -1,7 +1,5 @@
-"""Richard S. Sutton and Andrew G. Barto - Reinforcement Learning: An Introduction
-Second edition, 2018
-
-Chapter 2.5, exercise 2.5,
+#!/usr/bin/env python3
+"""Chapter 2.5, exercise 2.5,
 page 33
 """
 import time
