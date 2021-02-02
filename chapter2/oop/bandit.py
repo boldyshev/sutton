@@ -8,7 +8,7 @@ from matplotlib.ticker import PercentFormatter
 
 
 class Bandit:
-    """Parent class for all sample-average methods"""
+    """Parent class for all action-value methods"""
     def __init__(self,
                  n_arms=10,
                  true_value=0,
