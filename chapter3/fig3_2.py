@@ -45,7 +45,7 @@ def state_reward(state, action):
 
 
 def update_value(state, discount=0.9):
-    """Iterative policy evaluation (page 75 pseudocode implementation)
+    """Update value for particular state
 
     :param state: state for which we calculate value
     :type state: tuple
@@ -64,7 +64,7 @@ def update_value(state, discount=0.9):
 # evaluation accuracy
 theta = 1e-6
 
-# difference between values calculated on sequential steps
+# Iterative policy evaluation (pseudocode implementation from page 75)
 delta = 1e-5
 while delta > theta:
     delta = 0
