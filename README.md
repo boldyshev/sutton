@@ -14,7 +14,7 @@ Chapters are added as I study the book.
 [John Weatherwax solutions for the first edition](https://usermanual.wiki/Pdf/weatherwaxsuttonsolutionsmanual.504010221/view)
 (Check out his personal [webpage](https://waxworksmath.com/index.aspx). Solutions for a ton of math books. This man is a  monster)
 
-####Repos:
+#### Repos:
 
 https://github.com/ShangtongZhang/reinforcement-learning-an-introduction
 
