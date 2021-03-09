@@ -92,8 +92,7 @@ def grad_bline(steps, alpha):
     return optimals
 
 
-if __name__ == '__main__':
-
+def fig2_5():
     runs = int(2e3)
     steps = int(1e3)
 
@@ -125,3 +124,7 @@ if __name__ == '__main__':
 
     plot(result, labels, '% Optimal action', colors=colors)
     plt.show()
+
+
+if __name__ == '__main__':
+    fig2_5()

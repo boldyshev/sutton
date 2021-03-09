@@ -78,8 +78,7 @@ def eps_greedy(steps, eps):
     return rewards
 
 
-if __name__ == '__main__':
-
+def fig2_4():
     runs = int(2e3)      # the number of different bandit experiments
     steps = int(1e3)     # number of learning iterations in a single experiment
 
@@ -106,3 +105,7 @@ if __name__ == '__main__':
     plot((rewards_ucb, rewards_greedy), labels, 'Average reward', colors=('blue', 'grey'))
 
     plt.show()
+
+
+if __name__ == '__main__':
+    fig2_4()

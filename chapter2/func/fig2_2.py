@@ -151,8 +151,7 @@ def plot(datay,
     return ax
 
 
-if __name__ == '__main__':
-
+def fig2_2():
     runs = int(2e3)
     steps = int(1e3)
 
@@ -166,14 +165,14 @@ if __name__ == '__main__':
         # 3 epsilons, 2000 runs
         eps01 = np.array(pool.starmap(eps_greedy, [(steps, 0.1)] * runs))
         eps001 = np.array(pool.starmap(eps_greedy, [(steps, 0.01)] * runs))
-        greedy = np.array(pool.starmap(greedy, [(steps,)] * runs))
+        greedy1 = np.array(pool.starmap(greedy, [(steps, )] * runs))
         # got (2000, 2, 1000)-shaped arrays, axis=1 stands for rewards and optimals
 
     t2 = time.perf_counter()
     print(f'Done in {round(t2 - t1, 3)} sec')
 
     # transpose the arrays to shape (2, 2000, 1000)
-    result = eps01, eps001, greedy
+    result = eps01, eps001, greedy1
     # result = [np.transpose(i, (1, 0, 2)) for i in result]
 
     # get the average rewards
@@ -189,3 +188,7 @@ if __name__ == '__main__':
     plot(optimals, labels, '% Optimal action')
 
     plt.show()
+
+
+if __name__ == '__main__':
+    fig2_2()

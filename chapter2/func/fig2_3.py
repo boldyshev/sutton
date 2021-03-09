@@ -66,8 +66,7 @@ def optimistic(steps, alpha):
     return optimals
 
 
-if __name__ == '__main__':
-
+def fig2_3():
     steps = int(1e3)
     runs = int(2e3)
 
@@ -95,3 +94,7 @@ if __name__ == '__main__':
     plot((real, opt), labels, '% Optimal action', colors=('grey', 'dodgerblue'))
 
     plt.show()
+
+
+if __name__ == '__main__':
+    fig2_3()
