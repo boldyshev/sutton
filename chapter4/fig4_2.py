@@ -1,6 +1,11 @@
+#!/usr/bin/env python3
+
+"""Figure 4.2 reproduction, page 81"""
+
+import copy
+import math
 import time
-import multiprocessing as mp
-from math import exp, factorial, pow
+import itertools
 
 import numpy as np
 import seaborn as sns
@@ -8,83 +13,97 @@ import matplotlib.pyplot as plt
 
 # maximum car number at each location
 MAX_CARS = 20
-# maximal number of cars to be moved overnight
+
+# all possible states -- cartesian product of 21 (as 0 is a possible state)
+STATES = tuple(itertools.product(range(MAX_CARS + 1), repeat=2))
+
+# maximal number of cars to move overnight
 MAX_MOVE = 5
+
 # policy evaluation accuracy
 THETA = 1e-2
 
-# all possible states
-states = [(x, y) for x in range(MAX_CARS + 1) for y in range(MAX_CARS + 1)]
-# values as dictionary with states being the keys
-values = dict((state, 0) for state in states)
-# same for policy
-policy = dict((state, 0) for state in states)
+# initialise values and policy
+# values as 2d array axis0 and axis1 (x, y) being the numbers of cars at first and second locations respectively
+values = np.zeros((MAX_CARS + 1,) * 2)
+
+# action chosen at each state (integers from -5 to 5)
+policy = np.zeros((MAX_CARS + 1,) * 2, dtype=int)
+
+# rewards and transition probabilities will be precalculated
+# 4d array for cumulative reward for transition from one state (x, y) to another (x1, y1)
+rewards = np.zeros((MAX_CARS + 1, ) * 4)
+
+# 4d array for transition probabilities between all states
+transition_probs = np.zeros((MAX_CARS + 1, ) * 4)
 
 
-def poisson_prob(k, mu):
+def poisson_prob(n, _lambda):
     """The probability of k occurrences of a random variable having poisson distribution with expected value mu
 
-    :param k: number of occurrences
-    :type k: int
-    :param mu: expected value
-    :type mu: int
+    :param n: number of occurrences
+    :type n: int
+    :param _lambda: expected value
+    :type _lambda: int
     :return: probability of k
     :rtype: float
     """
-    return exp(-mu) * pow(mu, k) / factorial(k)
+    return math.exp(-_lambda) * pow(_lambda, n) / math.factorial(n)
 
 
-# all possible pairs of car requests with the probability higher than 0.01 for the first and second location
-# say, the probability to get a request for 8 cars at the first location (expected value is 3) is ~0.0081
-car_requests = [(i, j) for i in range(8) for j in range(10)]
-# the same for car returns
-car_returns = [(i, j) for i in range(8) for j in range(7)]
-# all possible pairs of requests and returns
-requests_returns = [(i, j) for i in car_requests for j in car_returns]
+def precalculate():
+    """Precalculate rewards and transition probabilities
 
-# precalculate probabilities for all possible combinations of requests and returns in two locations
-poisson_prob_product = dict()
-for car_request, car_return in requests_returns:
-    # expectations for requested number of cars are 3 and 4 for the first and he second location respectively
-    prob_request = poisson_prob(car_request[0], 3) * poisson_prob(car_request[1], 4)
-    # expectations for returned number of cars are 3 and 2 for the first and he second location respectively
-    prob_return = poisson_prob(car_return[0], 3) * poisson_prob(car_return[1], 2)
-    poisson_prob_product[car_request, car_return] = prob_request * prob_return
-
-
-def state_update(state, car_request, car_return):
-    """State change given the number of requested and returned cars and the prize for renting cars
-
-    :param state: state before request and return
-    :type state: tuple
-    :param car_request: number of cars requested at the first and the second location
-    :type car_request: tuple
-    :param car_return: number of cars returned at the first and the second location
-    :type car_return: tuple
-    :return: new state and reward for rented cars
-    :rtype: tuple
+    :return: rewards and transition probabilities
     """
-    # can't request more cars than available
-    car_request = min(state[0], car_request[0]), min(state[1], car_request[1])
 
-    # cars on both locations after request
-    next_state = [state[0] - car_request[0], state[1] - car_request[1]]
+    # precalculate lists of probability mass functions for different car numbers
+    # see fig4_2.ipynb for clarification
+    poisson_probs = dict()
+    for _lambda in (2, 3, 4):
+        for cars_num in range(MAX_CARS + 1):
+            poisson_probs[cars_num, _lambda] = [poisson_prob(k, _lambda) for k in range(cars_num + 1)]
+            poisson_probs[cars_num, _lambda][-1] += 1 - sum(poisson_probs[cars_num, _lambda])
 
-    # get $10 for each rented car
-    reward = sum(car_request) * 10
+    t0 = time.perf_counter()
 
-    # get returned cars, remove if their number exceeds 20
-    next_state[0] = min(next_state[0] + car_return[0], 20)
-    next_state[1] = min(next_state[1] + car_return[1], 20)
+    # x and y state for numbers of cars at first and second locations respectively
+    for x, y in STATES:
+        print('\r', f'Precalculating rewards and transition probabilities for state {x, y}', end=' ')
+        # can't request more cars then available at either location
+        for request_x, req_quest in itertools.product(range(x + 1), range(y + 1)):
+            # cars left after request
+            x1, y1 = x - request_x, y - req_quest
 
-    return tuple(next_state), reward
+            # probability for the number of requested cars at both locations
+            prob_req = poisson_probs[x, 3][request_x] * poisson_probs[y, 4][req_quest]
+            # $10 for each car rented
+
+            reward = (request_x + req_quest) * 10
+            # can't return more than 20 minus number of cars left (cars over 20 disappear from the problem)
+            for return_x, return_y in itertools.product(range(21 - x1), range(21 - y1)):
+                # cars on both locations after return
+                x2, y2 = x1 + return_x, y1 + return_y
+
+                # probability for the number of cars returned to both locations
+                prob_ret = poisson_probs[20 - x1, 3][return_x] * poisson_probs[20 - y1, 2][return_y]
+
+                # probability of this particular transition from (x, y) to (x2, y2)
+                prob_product = prob_req * prob_ret
+
+                # update reward for (x, y) to (x2, y2) transition
+                rewards[x, y, x2, y2] += reward * prob_product
+
+                # update probability of (x, y) to (x2, y2) transition
+                transition_probs[x, y, x2, y2] += prob_product
+
+    t1 = time.perf_counter()
+    print('done in ', round(t1 - t0, 3), 'seconds')
 
 
 def expected_value(values, state, action, discount=0.9):
-    """Calculate expected values for a given action
+    """Calculate expected value for a given action
 
-    :param values: all known values so far
-    :type values: dict
     :param state: state which value is updated
     :type state: tuple
     :param action: action taken in this state
@@ -94,52 +113,18 @@ def expected_value(values, state, action, discount=0.9):
     :return: new value
     :rtype: float
     """
-    # move cars overnight
-    state = min(state[0] - action, 20), min(state[1] + action, 20)
-    # pay for car movement
+    x, y = state
+
+    # move cars overnight, actions are validated during the policy improvement
+    x, y = min(x - action, 20), min(y + action, 20)
+
+    # pay $2 for each moved car
     new_value = -2 * abs(action)
 
-    for car_request, car_return in requests_returns:
-        prob = poisson_prob_product[car_request, car_return]
-        next_state, reward = state_update(state, car_request, car_return)
-        new_value += prob * (reward + discount * values[next_state])
+    # Bellman equation
+    new_value += np.sum(rewards[x, y]) + np.sum(transition_probs[x, y] * values) * discount
+
     return new_value
-
-
-def eval_state(values, state, action):
-    """Function for parallel policy evaluation
-
-    :param values: all known values so far
-    :type values: dict
-    :param state: state which value is updated
-    :type state: tuple
-    :param action: action taken in this state
-    :type action: int
-    :return: state, new value and its difference with the previous value
-    :rtype: tuple
-    """
-    new_value = expected_value(values, state, action)
-    delta = abs(values[state] - new_value)
-
-    return state, new_value, delta
-
-
-def policy_evaluation():
-    """Parallel implementation of policy evaluation algorithm from RL book page 80
-
-    :return: None
-    """
-
-    delta = 1
-    while delta > THETA:
-        delta = 0
-        with mp.Pool(mp.cpu_count()) as pool:
-            result = pool.starmap(eval_state, [(values, state, policy[state]) for state in states])
-        for state, new_value, delta1 in result:
-            values[state] = new_value
-            delta = max(delta, delta1)
-
-        print('\r', f'policy evaluation {delta}'[:27], f'-> {THETA}', end='')
 
 
 def argmax(iterable):
@@ -153,38 +138,42 @@ def argmax(iterable):
     return max(range(len(iterable)), key=lambda x: iterable[x])
 
 
-def improve_step(state):
-    """Function for parallel policy improvement
+def policy_evaluation():
+    """Policy evaluation implementation (step 2 of algorithm at page 80)
 
-    :param state: state for which we improve policy
-    :return: same state, best action with respect to the expected value and if it matches the current policy
-    :rtype: tuple
+    :return: None
     """
-    # can't move overnight more cars, than there are at the location
-    actions = range(-min(state[1], 5), min(state[0], 5) + 1)
-    # list of values of all possible action
-    action_values = [expected_value(values, state, a) for a in actions]
-    # action with maximal value
-    optimal_action = actions[argmax(action_values)]
-    # if the current policy chooses maximal value action
-    is_optimal = optimal_action == policy[state]
-
-    return state, optimal_action, is_optimal
+    delta = 1
+    while delta > THETA:
+        delta = 0
+        old_values = copy.deepcopy(values)
+        for state in STATES:
+            values[state] = expected_value(old_values, state, policy[state])
+            delta = max(delta, abs(values[state] - old_values[state]))
 
 
 def policy_improvement():
-    """Parallel implementation of policy improvement algorithm from RL book page 80
+    """Policy improvement implementation (step 3 of algorithm at page 80)
 
-    :return: whether the policy is stable
-    :rtype: bool
+    :return: None
     """
-    with mp.Pool(mp.cpu_count()) as pool:
-        result = pool.map(improve_step, states)
-    stables = []
-    for state, optimal_action, is_optimal in result:
-        policy[state] = optimal_action
-        stables.append(is_optimal)
-    policy_stable = False not in stables
+    policy_stable = True
+    for state in STATES:
+        old_action = policy[state]
+
+        # get all possible actions
+        x, y = state
+        actions = range(-min(y, MAX_MOVE), min(x, MAX_MOVE) + 1)
+
+        # list of action values
+        action_values = [expected_value(values, state, action) for action in actions]
+
+        # optimal action
+        policy[x, y] = actions[argmax(action_values)]
+
+        if old_action != policy[state]:
+            policy_stable = False
+
     return policy_stable
 
 
@@ -197,11 +186,7 @@ def heatmap(data, title, axes, iteration):
     :param iteration:
     :return:
     """
-    data_arr = np.empty((MAX_CARS + 1, MAX_CARS + 1))
-    for state, value in data.items():
-        x, y = state
-        data_arr[x][y] = value
-    h = sns.heatmap(data_arr, ax=axes[iteration])
+    h = sns.heatmap(data, ax=axes[iteration])
     h.set_ylabel('#Cars at first location')
     h.set_xlabel('#Cars at second location')
     h.set_title(title)
@@ -210,31 +195,34 @@ def heatmap(data, title, axes, iteration):
 
 
 def policy_iteration():
-    """Policy iteration implemention from RL book page 80
+    """Policy iteration implementation from RL book page 80
 
     :return: None
     """
+    precalculate()
 
-    policy_stable = False
-    iteration = 0
+    # plotting
     fig, axes = plt.subplots(2, 3, figsize=(40, 20))
-    plt.subplots_adjust(wspace=0.1, hspace=0.2)
+    # plt.subplots_adjust(wspace=0.1, hspace=0.2)
     axes = axes.flatten()
+
+    iteration = 0
+    policy_stable = False
     while not policy_stable:
+        print('\r', 'policy iteration ', iteration, end='')
+        # plot policy
         policy_title = r'$\pi_{}$'.format(iteration)
         heatmap(policy, policy_title, axes, iteration)
-        print('\niteration ', iteration)
-        t0 = time.perf_counter()
-        policy_evaluation()
-        t1 = time.perf_counter()
-        print(f' done in {round(t1 - t0, 3)} sec')
 
-        print(' policy improvement...', end=' ')
+        # step2
+        policy_evaluation()
+
+        # step3
         policy_stable = policy_improvement()
-        t2 = time.perf_counter()
-        print(f' done in {round(t2 - t1, 3)} sec')
 
         iteration += 1
+
+    # plot values
     value_title = r'$v_{\pi_4}$'
     heatmap(values, value_title, axes, iteration)
 
