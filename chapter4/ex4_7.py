@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Exercise 4.7, page 81"""
+"""Exercise 4.7, page 82"""
 
 import copy
 import math
