@@ -88,6 +88,7 @@ def value_iteration():
     delta = 1
     while delta >= THETA:
         delta = policy_evaluate()
+        policy_improve()
         sweep += 1
         values_history.append(copy.deepcopy(values))
     return values_history
@@ -125,7 +126,6 @@ def plot(values_history, policy):
 
 def fig4_3():
     values_history = value_iteration()
-    policy_improve()
     plot(values_history, policy)
 
 

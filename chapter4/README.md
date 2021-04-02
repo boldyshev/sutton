@@ -18,7 +18,7 @@ Good ideas how to speed up code execution in Yang Zhang's repo https://github.co
 # Figure 4.3
 An excellent explanation on the family of optimal policies in vojtamolda's [repo](https://github.com/vojtamolda/reinforcement-learning-an-introduction/blob/main/chapter04/chapter04.pdf)
 
-How to replicate policy plot in the book https://github.com/ShangtongZhang/reinforcement-learning-an-introduction/issues/83
+How to replicate policy plot from the RL book https://github.com/ShangtongZhang/reinforcement-learning-an-introduction/issues/83
 
 Some experiments with policies in James Teow's blog https://medium.com/@jaems33/gamblers-problem-b4e91040e58a
 

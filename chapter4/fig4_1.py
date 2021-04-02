@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+"""Figure 4.1 reproduction, page 77"""
+
 from copy import deepcopy
 import matplotlib.pyplot as plt
 from matplotlib.table import Table
