@@ -7,7 +7,7 @@ Chapters are added as I study the book.
 
 ### Useful materials
 
-[Coursera: Fundamentals of Reinforcement Learning](https://www.coursera.org/learn/fundamentals-of-reinforcement-learning) (by Rich Sutton's graduate students)
+[Coursera: Fundamentals of Reinforcement Learning](https://www.coursera.org/learn/fundamentals-of-reinforcement-learning) (by Rich Sutton's PhD students)
 
 [YouTube: RL Course by David Silver](https://www.youtube.com/watch?v=2pWv7GOvuf0&list=PLqYmG7hTraZDM-OYHWgPebj2MfCFzFObQ) (DeepMind research group leader)
 
