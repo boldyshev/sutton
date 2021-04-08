@@ -6,7 +6,6 @@ import copy
 import time
 import random
 import itertools
-import collections
 
 import numpy as np
 import seaborn as sns
@@ -14,6 +13,7 @@ import matplotlib.pyplot as plt
 
 
 class BlackJack:
+
     # diamonds, clubs, hearts and spades
     SUITS_NUMBER = 4
 
@@ -25,6 +25,25 @@ class BlackJack:
 
     # Fill the deck with face cards
     _deck += [10] * SUITS_NUMBER * FACE_CARD_TYPES
+
+    player_final_sums = range(4, 32)
+    dealer_final_sums = range(4, 32)
+
+    rewards = dict()
+    for player_sum, dealer_sum in itertools.product(player_final_sums, dealer_final_sums):
+
+        if player_sum > 21:
+            reward = -1
+        elif dealer_sum > 21:
+            reward = 1
+        elif player_sum == dealer_sum:
+            reward = 0
+        elif player_sum > dealer_sum:
+            reward = 1
+        elif dealer_sum > player_sum:
+            reward = -1
+
+        rewards[player_sum, dealer_sum] = reward
 
     def __init__(self):
 
@@ -87,50 +106,25 @@ class BlackJack:
 def generate_episode(policy):
     black_jack = BlackJack()
     player_state = black_jack.initial_player_state
-    state_sequence = [player_state]
-
-    if 21 in (black_jack.player_sum, black_jack.dealer_sum):
-        if black_jack.player_sum == black_jack.dealer_sum:
-            reward = 0
-        elif black_jack.player_sum == 21:
-            reward = 1
-        elif black_jack.dealer_sum == 21:
-            reward = -1
-            if black_jack.player_sum < 12:
-                state_sequence = list()
-        return state_sequence, reward
+    if black_jack.player_sum < 12:
+        state_sequence = list()
+    else:
+        state_sequence = [player_state]
 
     while black_jack.player_sum < 12:
         player_state = black_jack.player_hits()
         state_sequence = [player_state]
-        if black_jack.player_sum == 21:
-            reward = 1
-            return state_sequence, reward
 
     while policy[player_state]:
         player_state = black_jack.player_hits()
-        if black_jack.player_sum > 21:
-            reward = -1
-            return state_sequence, reward
-        elif black_jack.player_sum == 21:
-            reward = 1
-            state_sequence.append(player_state)
-            return state_sequence, reward
 
+        if black_jack.player_sum > 21:
+            return state_sequence, black_jack.rewards[black_jack.player_sum, black_jack.dealer_sum]
         state_sequence.append(player_state)
 
     black_jack.play_as_dealer()
-    if black_jack.dealer_sum == 21:
-        reward = -1
-        return state_sequence, reward
-    elif black_jack.dealer_sum > 21:
-        reward = 1
-        return state_sequence, reward
 
-    unequal_sum = black_jack.player_sum != black_jack.dealer_sum
-    reward = int(unequal_sum)
-
-    return state_sequence, reward
+    return state_sequence, black_jack.rewards[black_jack.player_sum, black_jack.dealer_sum]
 
 
 def plot_values(values):

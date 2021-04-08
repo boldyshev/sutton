@@ -6,3 +6,6 @@
 |![fig5_1a](figs/fig5_1a.svg) |![fig5_1b](figs/fig5_1b.svg)
 
 
+# Figure 5.2
+[fig5_2.py](fig5_2.py)
+![fig5_2](figs/fig5_2.svg)
