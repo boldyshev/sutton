@@ -17,10 +17,7 @@ def generate_episode(policy):
     black_jack = BlackJack()
     player_state = black_jack.initial_player_state
     action = random.choice((True, False))
-    if black_jack.player_sum < 12:
-        state_action_sequence = list()
-    else:
-        state_action_sequence = [(player_state, action)]
+    state_action_sequence = [(player_state, action)]
 
     while black_jack.player_sum < 12:
         player_state = black_jack.player_hits()

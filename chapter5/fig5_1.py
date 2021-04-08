@@ -106,10 +106,7 @@ class BlackJack:
 def generate_episode(policy):
     black_jack = BlackJack()
     player_state = black_jack.initial_player_state
-    if black_jack.player_sum < 12:
-        state_sequence = list()
-    else:
-        state_sequence = [player_state]
+    state_sequence = [player_state]
 
     while black_jack.player_sum < 12:
         player_state = black_jack.player_hits()
@@ -161,7 +158,7 @@ def first_visit_monte_carlo_prediction():
     policy = dict(((x, y, z), False) if y in (20, 21) else ((x, y, z), True) for (x, y, z) in states)
 
     t0 = time.perf_counter()
-    episodes_number = int(1e4)
+    episodes_number = int(5e5)
 
     for i in range(episodes_number):
         print('\r', f'Episode {i + 1}', end='')
