@@ -9,6 +9,7 @@ import itertools
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 # Blackjack simulator is the same as in figure 5.1
 from fig5_1 import BlackJack
@@ -125,8 +126,8 @@ def monte_carlo_exploring_starts():
     episodes_number = int(5e5)
 
     # Loop over episodes
-    for i in range(episodes_number):
-        print('\r', f'Episode {i + 1}', end='')
+    for i in tqdm(range(episodes_number)):
+        # print('\r', f'Episode {i + 1}', end='')
         state_action_sequence, reward = generate_episode(policy)
 
         # Loop for each step of episode

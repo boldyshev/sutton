@@ -9,3 +9,7 @@
 # Figure 5.2
 [fig5_2.py](fig5_2.py)
 ![fig5_2](figs/fig5_2.svg)
+
+# Figure 5.3
+[fig5_3.py](fig5_3.py)
+![fig5_3](figs/fig5_3.svg)
