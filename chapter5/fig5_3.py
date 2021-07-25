@@ -95,14 +95,15 @@ def importance_sampling_ratio(state_action_sequence, target_policy):
 
 
 def calculate_values(target_policy):
-
-    episodes_number = int(1e4)
+    """According to  section 5.5, pages 103-105"""
 
     ordinary_importance_sampling = list()
     weighted_importance_sampling = list()
 
     numerator = 0
     denominator = 0
+
+    episodes_number = int(1e4)
 
     for i in range(1, episodes_number):
         state_action_sequence, _return = generate_episode()
@@ -111,6 +112,8 @@ def calculate_values(target_policy):
         numerator += ratio * _return
         denominator += ratio
 
+        # Evaluate the same state, each episode starts with that state
+        # so the number of episodes with that state equals the number of all episodes i
         ordinary = numerator / i
         ordinary_importance_sampling.append(ordinary)
 

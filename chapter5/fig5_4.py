@@ -20,7 +20,7 @@ def generate_episode():
         # 1 for left, 0 for right
         action = getrandbits(1)
 
-        # If the action doesn't match the target policy, importance ratio is 0 and the whole return is 0
+        # If the action doesn't match the target policy, importance ratio is 0 so the return is also 0
         if not action:
             return 0
 
@@ -39,6 +39,7 @@ def single_run(steps_number):
     for i in trange(1, steps_number):
 
         numerator += generate_episode()
+
         values.append(numerator / i)
 
     return np.array(values)
@@ -58,18 +59,20 @@ def plot_fig5_4(values):
     plt.rc('mathtext', fontset="cm")
     plt.ylim(-0.1, 3)
     plt.xscale("log")
-    plt.savefig('figs/fig5_4.svg', format='svg')
+    plt.savefig('figs/fig5_4.png', dpi=300)
 
 
 if __name__ == '__main__':
 
     t0 = time.perf_counter()
     # Use multiprocessing for 10 independent runs
-    steps_number = [int(1e7)] * 10
+    results = list()
+
+    # Not enough RAM for 100_000_000 steps
+    steps_number = int(1e7)
     with mp.Pool(mp.cpu_count()) as pool:
-        results = pool.map(single_run, steps_number)
+        results = np.array(pool.map(single_run, [steps_number] * 10))
     t1 = time.perf_counter()
     print(f'Done in {t1 - t0} sec')
-
     # Plotting
     plot_fig5_4(results)

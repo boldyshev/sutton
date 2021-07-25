@@ -15,10 +15,10 @@ import matplotlib.pyplot as plt
 class BlackJack:
     """Class for simulating the blackjack game episodes"""
 
-    # diamonds, clubs, hearts and spades
+    # Diamonds, clubs, hearts and spades
     SUITS_NUMBER = 4
 
-    # jacks, queens and kings
+    # Jacks, queens and kings
     FACE_CARD_TYPES = 3
 
     # Fill the deck with aces (1) and pip cards (2-10)
@@ -27,7 +27,7 @@ class BlackJack:
     # Fill the deck with face cards
     _deck += [10] * SUITS_NUMBER * FACE_CARD_TYPES
 
-    # precalculate rewards for possible game outcomes
+    # Precalculate rewards for possible game outcomes
     player_final_sums = range(4, 32)
     dealer_final_sums = range(4, 32)
 
@@ -53,7 +53,7 @@ class BlackJack:
         self.deck = copy.copy(self._deck)
 
         # Begin game: deal two cards for dealer and player
-        # "Hand" is a list of cards that player or dealer hold
+        # "Hand" is a list of cards that player or dealer holds
         self.player_hand = [self.deal_card() for _ in range(2)]
         self.dealer_hand = [self.deal_card() for _ in range(2)]
 
@@ -68,12 +68,12 @@ class BlackJack:
         self.initial_player_state = usable_ace, self.player_sum, self.dealer_showing
 
     def deal_card(self):
-        """Take a random card from the deck. Taken cards do not return to the deck"""
+        """Take a random card from the deck. Taken cards are not returned to the deck"""
         return self.deck.pop(random.randrange(len(self.deck)))
 
     @staticmethod
     def usable_ace(hand):
-        """Whether there is a usable ace in a hand"""
+        """Chtck if there is a usable ace in a hand"""
         ace = 1 in hand
         usable = sum(hand) < 12
         return ace and usable
@@ -109,7 +109,7 @@ class BlackJack:
             _, self.dealer_sum, self.dealer_hand = self.count_sum(self.dealer_hand)
 
     def player_hits(self):
-        """Single hit move from the player"""
+        """Single hit move of the player"""
         card = self.deal_card()
         self.player_hand.append(card)
         usable_ace, self.player_sum, self.player_hand = self.count_sum(self.player_hand)
