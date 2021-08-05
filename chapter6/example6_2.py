@@ -38,6 +38,7 @@ for key in 'abcde':
 REWARDS = dict.fromkeys(ACTIONS, 0)
 REWARDS[('e', 'right')] = 1
 
+# Here I try arrays
 
 class RandomWalk:
 
