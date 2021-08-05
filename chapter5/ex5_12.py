@@ -204,13 +204,14 @@ def mc_on_policy_control(env, q, policy, episodes_number, eps=0.1):
         _return = 0
         state_action_idx_sequence = generate_episode(env, policy)
 
-        # Iterate backwards
+        # Reverse the sequence to calculate the return for certain state-action pair
         state_action_idx_sequence = state_action_idx_sequence[::-1]
 
         # first-visit method
         state_action_idx_set = set(state_action_idx_sequence)
 
         for state_action_idx in state_action_idx_set:
+            # As reward is always -1, the return is the index of state-action pair in reversed sequence
             _return = -(state_action_idx_sequence.index(state_action_idx) + 1)
             state, action_idx = state_action_idx
             state_action_counter[state][action_idx] += 1
