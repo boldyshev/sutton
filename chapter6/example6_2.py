@@ -2,6 +2,7 @@
 
 import copy
 import time
+import multiprocessing as mp
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,7 +31,7 @@ TRUE_VALUES = np.arange(1, 6) / 6
 
 
 # Reward for each action
-REWARDS = np.zeros((len(STATES), 2))
+REWARDS = np.zeros((len(STATES), 2), dtype=int)
 REWARDS[5, 1] = 1
 
 
@@ -49,15 +50,16 @@ class RandomWalk:
             action_idxs = [state_to_index[state] for state in actions]
             self.actions.append(action_idxs)
 
-        self.values = copy.deepcopy(values)
+        self.values = copy.copy(values)
         self.probabilities = probabilities
         self.rewards = rewards
 
     def step(self, state):
         next_state_idxs = range(len(self.actions[state]))
         next_state_idx = np.random.choice(next_state_idxs, p=self.probabilities[state])
+        next_state = self.actions[state][next_state_idx]
+
         reward = self.rewards[state][next_state_idx]
-        next_state = self.states[next_state_idx]
 
         return next_state, reward
 
@@ -73,7 +75,7 @@ class RandomWalk:
 
         return state_sequence, reward_sequence
 
-    def mc_estimate_episode(self, state=3, alpha=0.1):
+    def mc_episode_estimate(self, state=3, alpha=0.1):
 
         state_sequence, reward_sequence = self.generate_episode(state)
         return_sequence = np.cumsum(reward_sequence[::-1])[::-1]
@@ -83,7 +85,7 @@ class RandomWalk:
 
         return self.values
 
-    def td_estimate_episode(self, state=3, alpha=0.1):
+    def td_episode_estimate(self, state=3, alpha=0.1):
 
         while state not in self.terminals:
             next_state, reward = self.step(state)
@@ -92,13 +94,36 @@ class RandomWalk:
 
         return self.values
 
+    @staticmethod
+    def mc_batch_episode_increment(state_seq, reward_seq, values, value_increments):
+
+        return_sequence = np.cumsum(reward_seq[::-1])[::-1]
+        for state, _return in zip(state_seq, return_sequence):
+            value_increments[state] += _return - values[state]
+
+        return value_increments
+
+    @staticmethod
+    def td_batch_episode_increment(state_seq, reward_seq, values, value_increments):
+
+        for i, state in enumerate(state_seq[:-1]):
+            reward = reward_seq[i]
+            new_state = state_seq[i + 1]
+            value_increments[state] += reward + values[new_state] - values[state]
+        state = state_seq[-1]
+        reward = reward_seq[-1]
+        terminal_value = 0
+        value_increments[state] += reward + terminal_value - values[state]
+
+        return value_increments
+
 
 def plot_estimated_value(random_walk, axs):
 
     # TD-estimated values, left figure
     for episodes_num in (0, 1, 10, 100):
         for _ in range(episodes_num):
-            random_walk.td_estimate_episode()
+            random_walk.td_episode_estimate()
         td_values = random_walk.values[1: -1]
         axs.plot(STATES[1: -1], td_values, label=episodes_num)
 
@@ -108,28 +133,34 @@ def plot_estimated_value(random_walk, axs):
     axs.set_ylabel('Estimated value')
 
 
+def rms_single_run(random_walk, method, alpha, episodes=100):
+    random_walk.values = copy.copy(INIT_VALUES)
+    values = [[0.5] * 5]
+    for _ in range(episodes):
+        if method == 'td':
+            vals = random_walk.td_episode_estimate(alpha=alpha)
+        elif method == 'mc':
+            vals = random_walk.mc_episode_estimate(alpha=alpha)
+
+        vals = copy.copy(vals[1: -1])
+        values.append(vals)
+
+    errors = np.sqrt(((values - TRUE_VALUES) ** 2).mean(axis=1))
+
+    return errors
+
+
 def plot_rms_error(random_walk, axs, alphas, method, episodes=100, runs=100):
     for alpha in alphas:
-        print(f'RMS for {method}, alpha = {alpha}')
+        print('\r', f'RMS for {method}, alpha = {alpha}', end='')
         time.sleep(0.05)
-        average_errors_over_runs = np.zeros(episodes + 1)
-        for _ in tqdm(range(runs)):
-            random_walk.values = copy.deepcopy(INIT_VALUES)
-            values = [[0.5] * 5]
-            for _ in range(episodes):
-                if method == 'td':
-                    vals = random_walk.td_estimate_episode(alpha=alpha)
-                elif method == 'mc':
-                    vals = random_walk.mc_estimate_episode(alpha=alpha)
+        with mp.Pool(mp.cpu_count()) as pool:
+            args = [(random_walk, method, alpha, episodes)] * runs
+            errors = np.array(pool.starmap(rms_single_run, args))
 
-                values.append(vals[1: -1])
-
-            errors = np.sqrt(((values - TRUE_VALUES) ** 2).mean(axis=1))
-            average_errors_over_runs += errors
-
-        average_errors_over_runs /= runs
-        axs.plot(average_errors_over_runs, label=f'{method} ' + r'$\alpha=$' + f'{alpha}')
-
+        errors = np.mean(errors, axis=0)
+        axs.plot(errors, label=f'{method} ' + r'$\alpha=$' + f'{alpha}')
+    print()
     axs.legend()
     axs.set_xlabel('Walks/Episode')
     axs.set_ylabel('Empirical RMS error averaged over states')
@@ -145,11 +176,12 @@ if __name__ == '__main__':
     # TD-estimated values, left
     plot_estimated_value(random_walk, axs[0])
 
-    # # RMS errors, right
-    # mc_alphas = 0.01, 0.02, 0.03, 0.04
-    # plot_rms_error(random_walk, axs[1], mc_alphas, 'mc')
-    #
-    # td_alphas = 0.05, 0.1, 0.15
-    # plot_rms_error(random_walk, axs[1], td_alphas, 'td')
+    # RMS errors, right
+    mp.set_start_method('spawn')
+    mc_alphas = 0.01, 0.02, 0.03, 0.04
+    plot_rms_error(random_walk, axs[1], mc_alphas, 'mc')
+
+    td_alphas = 0.05, 0.1, 0.15
+    plot_rms_error(random_walk, axs[1], td_alphas, 'td')
 
     plt.show()

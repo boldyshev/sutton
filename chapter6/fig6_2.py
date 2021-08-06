@@ -1,74 +1,77 @@
 #!/usr/bin/env python3
 import matplotlib.pyplot as plt
+import numpy as np
 
 from example6_2 import *
 
 
-def td_episode_increment(state_seq, reward_seq, values):
-    value_increments = np.zeros(len(STATES))
+def converge_batch(batch, values, update_method, alpha, epsilon=1e-3):
+    while True:
+        value_increments = np.zeros(len(STATES))
 
-    for i, state in enumerate(state_seq[:-1]):
-        reward = reward_seq[i]
-        new_state = state_seq[i + 1]
-        value_increments[state] += reward + values[new_state] - values[state]
-    state = state_seq[-1]
-    reward = reward_seq[-1]
-    terminal_value = 0
-    value_increments[state] += reward + terminal_value - values[state]
+        for state_seq, reward_seq in batch:
+            update_method(state_seq, reward_seq, values, value_increments)
 
-    return value_increments
+        value_increments *= alpha
+        converged = (np.absolute(value_increments) < epsilon).all()
+        if converged:
+            break
+        values += value_increments
 
-
-def mc_episode_increment(state_seq, reward_seq, values):
-    value_increments = dict.fromkeys(STATES, 0)
-    return_sequence = np.cumsum(reward_seq[::-1])[::-1]
-    for state, _return in zip(state_seq, return_sequence):
-        value_increments[state] += _return - values[state]
-
-    return value_increments
+    return values
 
 
-def batch_update(random_walk, method, episodes=100, runs=100, alpha=0.001):
+def batch_single_run(random_walk, update_method, episodes=100, alpha=0.001):
+    values = copy.copy(INIT_VALUES)
+    batch = list()
+    errors = list()
+    for _ in range(episodes):
+        state_reward_seq = random_walk.generate_episode()
+        batch.append(state_reward_seq)
+        values = converge_batch(batch, values, update_method, alpha)
+        errors.append(np.sqrt(((values[1: -1] - TRUE_VALUES) ** 2).mean()))
 
-    errors_averaged_over_runs = np.zeros(episodes)
+    return errors
+
+
+def batch_update1(random_walk, update_method, episodes=100, runs=100, alpha=0.001):
+
+    errors_arr = list()
     for _ in tqdm(range(runs)):
-        values = np.array([[0.5] * 5])
+        errors_arr.append(batch_single_run(random_walk, update_method, episodes, alpha))
 
-        value_increments = dict.fromkeys(STATES, 0)
-        states_batch = list()
-        rewards_batch = list()
-        errors = list()
-        for _ in range(episodes):
-            state_seq, reward_seq = random_walk.generate_episode()
-            states_batch.append(state_seq)
-            rewards_batch.append(reward_seq)
+    errors_arr = np.mean(errors_arr, axis=0)
 
-            while True:
-                if method == 'td':
-                    value_increments = td_episode_increment(state_seq, reward_seq, values)
+    return errors_arr
 
-                elif method == 'mc':
-                    value_increments = mc_episode_increment(state_seq, reward_seq, values)
 
-                converged = (np.array(list(value_increments.values())) < 1e-2).all()
-                if converged:
-                    break
-                for key in values:
-                    values[key] += alpha * value_increments[key]
-            values_arr = np.array(list(values.values())[1: -1])
-            errors.append(np.sqrt(np.sum(np.power(values_arr - TRUE_VALUES, 2)) / 5.0))
-        errors_averaged_over_runs += np.array(errors)
-    errors_averaged_over_runs /= runs
-
-    return errors_averaged_over_runs
+def batch_update(random_walk, update_method, episodes=100, runs=100, alpha=0.001):
+    with mp.Pool(mp.cpu_count()) as pool:
+        args = [(random_walk, update_method, episodes, alpha)] * runs
+        errors = np.array(pool.starmap(batch_single_run, args))
+    errors = np.mean(errors, axis=0)
+    return errors
 
 
 if __name__ == '__main__':
 
     random_walk = RandomWalk(STATE_ACTIONS, INIT_VALUES, PROBABILITIES, REWARDS, TERMINALS)
 
-    td_errors = batch_update(random_walk, 'td')
-    mc_errors = batch_update(random_walk, 'mc')
+    mp.set_start_method('spawn')
+
+    td_update_method = random_walk.td_batch_episode_increment
+    mc_update_method = random_walk.mc_batch_episode_increment
+
+    t0 = time.perf_counter()
+    print('TD batch update...', end=' ')
+    td_errors = batch_update(random_walk, td_update_method)
+    t1 = time.perf_counter()
+    print(f'Done in {t1 - t0} sec')
+
+    print('MC batch update...', end=' ')
+    mc_errors = batch_update(random_walk, mc_update_method)
+    t2 = time.perf_counter()
+    print(f'Done in {t2 - t1} sec')
 
     plt.plot(td_errors, label='td')
     plt.plot(mc_errors, label='mc')
