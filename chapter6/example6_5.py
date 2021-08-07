@@ -3,22 +3,21 @@
 
 import random
 import copy
-import time
 
 import numpy as np
 from numpy import argmax
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 
 
 class WindyGridworld:
 
     def __init__(self, world_dimesions, actions, start_position, goal_position):
+        # world limits
         self.max_x, self.max_y = world_dimesions[0] - 1, world_dimesions[1] - 1
         self.start = start_position
         self.goal = goal_position
 
-        self.wind = np.array([0, 0, 0, 1, 1, 1, 2, 2, 1, 0])
+        self.wind = [0, 0, 0, 1, 1, 1, 2, 2, 1, 0]
 
         # Actions: up, down, right, left
         self.actions = copy.copy(actions)
@@ -26,8 +25,14 @@ class WindyGridworld:
     def step(self, state, action):
 
         x, y = state
+
+        # Wind impact
         y += self.wind[x]
+
+        # Change the coordinate by the selected action
         action_x, action_y = self.actions[action]
+
+        # Stay inside
         x = np.clip(x + action_x, 0, self.max_x)
         y = np.clip(y + action_y, 0, self.max_y)
         reward = -1
@@ -36,8 +41,11 @@ class WindyGridworld:
 
 
 def eps_greedy_policy(q, state, actions, eps=0.1):
+
+    # exploitation
     if random.random() > eps:
         action = argmax(q[state[0], state[1]])
+    # exploration
     else:
         action = random.randint(0, len(actions) - 1)
 
@@ -45,9 +53,14 @@ def eps_greedy_policy(q, state, actions, eps=0.1):
 
 
 def sarsa_step(world, q, state, action, alpha=0.5):
-    x0, y0, z0 = state[0], state[1], action
+
     next_state, reward = world.step(state, action)
     next_action = eps_greedy_policy(q, next_state, world.actions)
+
+    # State, action
+    x0, y0, z0 = state[0], state[1], action
+
+    # State', action'
     x1, y1, z1 = next_state[0], next_state[1], next_action
     q[x0, y0, z0] += alpha * (reward + q[x1, y1, z1] - q[x0, y0, z0])
 
@@ -78,14 +91,13 @@ def sarsa_windy(world, q, alpha=0.5, timesteps=8000):
     return timestep_seq, episodes_seq
 
 
-def example6_5():
+def solve_world(actions, world_type):
     dim = 10, 7
     start = 0, 3
     goal = 7, 3
-    actions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
     state_action_dim = *dim, len(actions)
 
-    world = WindyGridworld(dim, actions, start, goal)
+    world = world_type(dim, actions, start, goal)
     q = np.zeros(state_action_dim)
     x, y = sarsa_windy(world, q)
 
@@ -96,4 +108,5 @@ def example6_5():
 
 
 if __name__ == '__main__':
-    example6_5()
+    actions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    solve_world(actions, WindyGridworld)
