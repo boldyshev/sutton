@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
+"""Example 6.2, page 125"""
+
 
 import copy
-import time
 import multiprocessing as mp
 
 import numpy as np
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 
 # Create graph: vertices are states, edges are actions (transitions)
 STATE_ACTIONS = {'left': ('left', 'left'),
@@ -36,15 +36,19 @@ REWARDS[5, 1] = 1
 
 
 class RandomWalk:
+    """Represents Markov reward process defined by arbitrary graph"""
 
     def __init__(self, graph, values, probabilities, rewards, terminals):
-        """Map all states to numeric arrays"""
+        """Map states to numebers"""
 
         state_names = list(graph.keys())
         state_to_index = dict([(state, idx) for idx, state in enumerate(state_names)])
+
+        # left, a, b, c, d, e, right -> 0, 1, 2, 3, 4, 5, 6
         self.states = [state_to_index[state] for state in state_names]
         self.terminals = [state_to_index[state] for state in state_names if state in terminals]
 
+        # (left, b), ... -> [0, 2], ...
         self.actions = list()
         for actions in graph.values():
             action_idxs = [state_to_index[state] for state in actions]
@@ -55,16 +59,21 @@ class RandomWalk:
         self.rewards = rewards
 
     def step(self, state):
+        """Single step of hte Markov reward process"""
+
+        # Choose next state index
         next_state_idxs = range(len(self.actions[state]))
         next_state_idx = np.random.choice(next_state_idxs, p=self.probabilities[state])
-        next_state = self.actions[state][next_state_idx]
 
+        # Get next state and reward
+        next_state = self.actions[state][next_state_idx]
         reward = self.rewards[state][next_state_idx]
 
         return next_state, reward
 
     def generate_episode(self, state=3):
-
+        """Generates sequences of states and rewards, default starting state is C.
+        Returns pairs (S_0, R_1), (S_1, R_2), ... . Terminal state is omitted"""
         state_sequence = list()
         reward_sequence = list()
 
@@ -76,6 +85,7 @@ class RandomWalk:
         return state_sequence, reward_sequence
 
     def mc_episode_estimate(self, state=3, alpha=0.1):
+        """Estimate single episode" with Monte-Carlo method"""
 
         state_sequence, reward_sequence = self.generate_episode(state)
         return_sequence = np.cumsum(reward_sequence[::-1])[::-1]
@@ -86,6 +96,7 @@ class RandomWalk:
         return self.values
 
     def td_episode_estimate(self, state=3, alpha=0.1):
+        """Estimate single episode" with temporal-difference method"""
 
         while state not in self.terminals:
             next_state, reward = self.step(state)
@@ -153,7 +164,7 @@ def rms_single_run(random_walk, method, alpha, episodes=100):
 def plot_rms_error(random_walk, axs, alphas, method, episodes=100, runs=100):
     for alpha in alphas:
         print('\r', f'RMS for {method}, alpha = {alpha}', end='')
-        time.sleep(0.05)
+        # Calculate runs in parallel
         with mp.Pool(mp.cpu_count()) as pool:
             args = [(random_walk, method, alpha, episodes)] * runs
             errors = np.array(pool.starmap(rms_single_run, args))
@@ -176,8 +187,9 @@ if __name__ == '__main__':
     # TD-estimated values, left
     plot_estimated_value(random_walk, axs[0])
 
-    # RMS errors, right
     mp.set_start_method('spawn')
+
+    # RMS errors, right
     mc_alphas = 0.01, 0.02, 0.03, 0.04
     plot_rms_error(random_walk, axs[1], mc_alphas, 'mc')
 

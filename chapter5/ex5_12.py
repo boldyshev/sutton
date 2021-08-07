@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 """Exercise 5.12, page 111"""
+
 import copy
 import time
 import random

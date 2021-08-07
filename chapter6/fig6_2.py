@@ -1,11 +1,31 @@
 #!/usr/bin/env python3
-import matplotlib.pyplot as plt
-import numpy as np
+"""Figure 6.2, page 127"""
+
+import time
+
+from tqdm import tqdm
 
 from example6_2 import *
 
 
 def converge_batch(batch, values, update_method, alpha, epsilon=1e-3):
+    """Repeat iterating over state-reward sequences of the batch until the value converges. Allows using either
+    Monte-Carlo or temporal-difference methods.
+
+    :param batch: pairs of state and reward sequences
+    :type batch: list
+    :param values: state values
+    :type values: numpy.array
+    :param update_method: RandomWalk.td_batch_episode_increment or RandomWalk.mc_batch_episode_increment
+    :type update_method: function
+    :param alpha: constant step-size parameter
+    :type alpha: float
+    :param epsilon: estimating accuracy
+    :type epsilon: float
+    :return: values updated with a given method
+    :rtype: numpy.array
+    """
+
     while True:
         value_increments = np.zeros(len(STATES))
 
@@ -22,6 +42,20 @@ def converge_batch(batch, values, update_method, alpha, epsilon=1e-3):
 
 
 def batch_single_run(random_walk, update_method, episodes=100, alpha=0.001):
+    """Single run over all episodes with batch including all previous episodes generated so far. Allows using either
+    Monte-Carlo or temporal-difference methods.
+
+    :param random_walk: Markov reward process with given parameters
+    :type random_walk: RandomWalk object
+    :param update_method: RandomWalk.td_batch_episode_increment or RandomWalk.mc_batch_episode_increment
+    :type update_method: function
+    :param episodes: numper of episodes
+    :type episodes: int
+    :param alpha: constant step-size parameter
+    :type alpha: float
+    :return: RMS value errors averaged over all states
+    :rtype: numpy.array
+    """
     values = copy.copy(INIT_VALUES)
     batch = list()
     errors = list()
@@ -34,7 +68,23 @@ def batch_single_run(random_walk, update_method, episodes=100, alpha=0.001):
     return errors
 
 
-def batch_update1(random_walk, update_method, episodes=100, runs=100, alpha=0.001):
+def batch_update_single_thread(random_walk, update_method, episodes=100, runs=100, alpha=0.001):
+    """Total batch update averaged over multiple runs. Single thread version. Allows using either Monte-Carlo or
+    temporal-difference methods.
+
+    :param random_walk: Markov reward process with given parameters
+    :type random_walk: RandomWalk object
+    :param update_method: RandomWalk.td_batch_episode_increment or RandomWalk.mc_batch_episode_increment
+    :type update_method: function
+    :param episodes: numper of episodes
+    :type episodes: int
+    :param runs: number of runs
+    :type runs: int
+    :param alpha: constant step-size parameter
+    :type alpha: float
+    :return: RMS value errors averaged over all runs
+    :rtype: numpy.array
+    """
 
     errors_arr = list()
     for _ in tqdm(range(runs)):
@@ -45,7 +95,9 @@ def batch_update1(random_walk, update_method, episodes=100, runs=100, alpha=0.00
     return errors_arr
 
 
-def batch_update(random_walk, update_method, episodes=100, runs=100, alpha=0.001):
+def batch_update_multi_thread(random_walk, update_method, episodes=100, runs=100, alpha=0.001):
+    """Multi-thread version of batch update"""
+
     with mp.Pool(mp.cpu_count()) as pool:
         args = [(random_walk, update_method, episodes, alpha)] * runs
         errors = np.array(pool.starmap(batch_single_run, args))
@@ -64,12 +116,12 @@ if __name__ == '__main__':
 
     t0 = time.perf_counter()
     print('TD batch update...', end=' ')
-    td_errors = batch_update(random_walk, td_update_method)
+    td_errors = batch_update_multi_thread(random_walk, td_update_method)
     t1 = time.perf_counter()
     print(f'Done in {t1 - t0} sec')
 
     print('MC batch update...', end=' ')
-    mc_errors = batch_update(random_walk, mc_update_method)
+    mc_errors = batch_update_multi_thread(random_walk, mc_update_method)
     t2 = time.perf_counter()
     print(f'Done in {t2 - t1} sec')
 
