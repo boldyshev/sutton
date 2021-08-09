@@ -14,6 +14,7 @@ class WindyGridworld:
     def __init__(self, world_dimesions, actions, start_position, goal_position):
         # world limits
         self.max_x, self.max_y = world_dimesions[0] - 1, world_dimesions[1] - 1
+
         self.start = start_position
         self.goal = goal_position
 
@@ -52,10 +53,10 @@ def eps_greedy_policy(q, state, actions, eps=0.1):
     return action
 
 
-def sarsa_step(world, q, state, action, alpha=0.5):
+def sarsa_step(world, q, state, action, alpha=0.5, eps=0.1):
 
     next_state, reward = world.step(state, action)
-    next_action = eps_greedy_policy(q, next_state, world.actions)
+    next_action = eps_greedy_policy(q, next_state, world.actions, eps=eps)
 
     # State, action
     x0, y0, z0 = state[0], state[1], action
@@ -66,10 +67,10 @@ def sarsa_step(world, q, state, action, alpha=0.5):
 
     state, action = next_state, next_action
 
-    return state, action
+    return state, action, reward
 
 
-def sarsa_windy(world, q, alpha=0.5, timesteps=8000):
+def sarsa_windy(world, q, alpha=0.5, timesteps=8000, eps=0.1):
     episode_counter = 0
     step_counter = 0
     timestep_seq = list()
@@ -77,10 +78,10 @@ def sarsa_windy(world, q, alpha=0.5, timesteps=8000):
 
     while step_counter < timesteps:
         state = copy.copy(world.start)
-        action = eps_greedy_policy(q, state, world.actions)
+        action = eps_greedy_policy(q, state, world.actions, eps=eps)
 
         while state != world.goal:
-            state, action = sarsa_step(world, q, state, action, alpha=alpha)
+            state, action, _ = sarsa_step(world, q, state, action, alpha=alpha)
 
             step_counter += 1
             timestep_seq.append(step_counter)
