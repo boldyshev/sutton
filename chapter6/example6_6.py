@@ -6,10 +6,11 @@ import time
 
 import numpy as np
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 import multiprocessing as mp
 
 from example6_5 import sarsa_step, eps_greedy_policy
+# import istarmap  # import to apply patch
 
 
 class CliffWorld:
@@ -73,13 +74,14 @@ def q_learning_step(world, q, state, action, alpha=0.5, eps=0.1):
     return state, action, reward
 
 
-def learning_cliff(method, world, alpha=0.5, episodes=500, eps=0.1):
+def learning_cliff(args):
 
+    method, world, alpha, episodes, eps = args
     state_action_dim = world.width + 1, world.height + 1, len(world.actions)
     q = np.zeros(state_action_dim)
     reward_sum_seq = list()
 
-    for _ in range(episodes):
+    for i in range(episodes):
         state = copy.copy(world.start)
         action = eps_greedy_policy(q, state, world.actions, eps=eps)
         rewards_sum = 0
@@ -91,11 +93,11 @@ def learning_cliff(method, world, alpha=0.5, episodes=500, eps=0.1):
     return reward_sum_seq
 
 
-def plot_method_results(world, method, runs):
+def method_results(world, method, runs, alpha=0.5, episodes=500, eps=0.1, chunksize=1):
     t0 = time.perf_counter()
-    with mp.Pool(mp.cpu_count()) as pool:
-        args = [(method, world)] * runs
-        result = np.array(pool.starmap(learning_cliff, args))
+    workers = mp.cpu_count()
+    args = [(method, world, alpha, episodes, eps)] * runs
+    result = np.array(process_map(learning_cliff, args, max_workers=workers, chunksize=chunksize))
     result = np.mean(result, axis=0)
     t1 = time.perf_counter()
     print(f'Done in {t1 - t0} sec')
@@ -112,15 +114,18 @@ def plot_example6_6(actions):
     world = CliffWorld(dim, actions, start, goal)
 
     # To get smooth curves you have to average results over multiple runs
-    runs = 1000
+    runs = 100
     mp.set_start_method('spawn')
 
-    print('Q-learning...', end=' ')
-    q_learning = plot_method_results(world, q_learning_step, runs)
+    print('Q-learning...')
+    time.sleep(0.5)
+    q_learning = method_results(world, q_learning_step, runs)
     plt.plot(q_learning, label='Q-learning')
 
-    print('Sarsa...', end=' ')
-    sarsa = plot_method_results(world, sarsa_step, runs)
+    time.sleep(0.5)
+    print('Sarsa...')
+    time.sleep(0.5)
+    sarsa = method_results(world, sarsa_step, runs)
     plt.plot(sarsa, label='Sarsa')
 
     plt.legend()
