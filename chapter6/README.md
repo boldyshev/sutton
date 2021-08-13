@@ -4,6 +4,8 @@
 
 # Figure 6.2
 [fig6_2.py](fig6_2.py)
+
+
 ![fig6_2](figs/fig6-2.svg)
 
 # Example 6.5
