@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Figure 6.3, page 133"""
 
-import copy
 import time
 import random
 import pickle
@@ -9,14 +8,14 @@ import pickle
 import numpy as np
 from numpy import argmax
 import matplotlib.pyplot as plt
-from tqdm.contrib.concurrent import process_map
 import multiprocessing as mp
 
-from example6_6 import CliffWorld, q_learning_step, learning_cliff, method_results
-from example6_5 import sarsa_step, eps_greedy_policy
+from example6_6 import CliffWorld, q_learning_step, method_results
+from example6_5 import sarsa_step
 
 NON_OPTIMAL_PROBABILITY = 0.1 / 3
 OPTIMAL_PROBABILITY = 0.9
+
 
 def sarsa_expected_step(world, q, state, action, alpha=0.5, eps=0.1):
 
@@ -60,29 +59,61 @@ def get_averages(world, method, runs, episodes, name):
     return result
 
 
-if __name__ == '__main__':
-
+def plot_results():
     dim = 12, 4
     start = 0, 0
     goal = 11, 0
     actions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 
+    world = CliffWorld(dim, actions, start, goal)
+
     mp.set_start_method('spawn')
 
-    world = CliffWorld(dim, actions, start, goal)
+    names = 'q-learning', 'sarsa', 'expected-sarsa'
+    methods = q_learning_step, sarsa_step, sarsa_expected_step
 
     # Interim performance
     runs = 50_000
     episodes = 100
-    names = 'q-learning', 'sarsa', 'expected-sarsa'
-    methods = q_learning_step, sarsa_step, sarsa_expected_step
     for name, method in zip(names, methods):
-        get_averages(world, method, runs, episodes, 'inter-' + name)
+        name = 'inter-' + name
+        averages = get_averages(world, method, runs, episodes, name)
+        plt.plot(averages, label=name)
 
     # Asymptotic performance
     runs = 10
     episodes = 100_000
-    names = 'q-learning', 'sarsa', 'expected-sarsa'
-    methods = q_learning_step, sarsa_step, sarsa_expected_step
     for name, method in zip(names, methods):
-        get_averages(world, method, runs, episodes, 'asympt-' + name)
+        name = 'asympt-' + name
+        averages = get_averages(world, method, runs, episodes, name)
+        plt.plot(averages, label=name)
+
+    plt.legend()
+    plt.ylim(-140, 0)
+    plt.show()
+
+
+def plot_saved_results():
+    names = 'q-learning', 'sarsa', 'expected-sarsa'
+    inter = dict()
+    asymp = dict()
+    for name in names:
+        with open(f'inter-{name}.pickle', 'rb') as f:
+            inter[name] = pickle.load(f)
+
+        with open(f'asympt-{name}.pickle', 'rb') as f:
+            asymp[name] = pickle.load(f)
+
+    for name in names:
+        y = inter[name]
+        y1 = asymp[name]
+        plt.plot(y, label='inter-' + name)
+        plt.plot(y1, label='asymp-' + name)
+
+    plt.legend()
+    plt.ylim(-140, 0)
+    plt.show()
+
+
+if __name__ == '__main__':
+    plot_saved_results()

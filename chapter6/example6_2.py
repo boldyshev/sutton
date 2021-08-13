@@ -59,7 +59,7 @@ class RandomWalk:
         self.rewards = rewards
 
     def step(self, state):
-        """Single step of hte Markov reward process"""
+        """Single step of the Markov reward process"""
 
         # Choose next state index
         next_state_idxs = range(len(self.actions[state]))
