@@ -27,6 +27,7 @@ PROBABILITIES = np.full((len(STATES), 2), [0.5, 0.5])
 # State values (probability to reach 'Right' state)
 INIT_VALUES = np.full(len(STATES), 0.5)
 np.put(INIT_VALUES, [0, -1], 0)
+
 TRUE_VALUES = np.arange(1, 6) / 6
 
 
@@ -57,6 +58,18 @@ class RandomWalk:
         self.values = copy.copy(values)
         self.probabilities = probabilities
         self.rewards = rewards
+
+    def get_true_values(self):
+
+        true_values = copy.copy(INIT_VALUES)
+        updated_values = np.empty(len(self.states))
+        while sum(abs(true_values - updated_values)) > 1e-5:
+            for state in self.states[1: -1]:
+                true_values[state] = updated_values[state]
+                next_values = np.array([updated_values[self.actions[state][0]], updated_values[self.actions[state][1]]])
+                updated_values[state] = sum(self.probabilities[state] * (next_values + self.rewards[state]))
+
+        return true_values
 
     def step(self, state):
         """Single step of the Markov reward process"""

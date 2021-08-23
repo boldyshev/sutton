@@ -10,7 +10,6 @@ from tqdm.contrib.concurrent import process_map
 import multiprocessing as mp
 
 from example6_5 import sarsa_step, eps_greedy_policy
-# import istarmap  # import to apply patch
 
 
 class CliffWorld:

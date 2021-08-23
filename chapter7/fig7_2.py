@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Exercise 7.2, page 143"""
+"""Figure 7.2, page 145"""
+# 1
 
 import multiprocessing as mp
 import pickle
@@ -14,13 +15,10 @@ from tqdm.contrib.concurrent import process_map
 from scipy import signal
 
 # ns are powers of 2
-# N_LIST = [2 ** power for power in range(10)]
-N_LIST = [4]
+N_LIST = [2 ** power for power in range(10)]
 
 # Set maximal alpha manually to get smoother curves
 ALPHA_MAX_LIST = [1, 1, 1, 1, 1, 0.5, 0.3, 0.2, 0.2, 0.2]
-
-ALPHA_MAX_LIST = [0.6]
 
 # Alpha sampling rate
 ALPHA_SAMPLING_RATE = 40
@@ -55,6 +53,7 @@ class RandomWalkEnv(gym.Env):
         self.state += transition
         reward = self.rewards[self.state]
 
+
         return self.state, reward
 
     def reset(self):
@@ -84,7 +83,7 @@ class RandomWalkEnv(gym.Env):
 
 
 gym.envs.registration.register(
-    id='RandomWalk-v1',
+    id='RandomWalk-v0',
     entry_point=lambda size: RandomWalkEnv(size),
     nondeterministic=True,
     kwargs={'size': 5}
@@ -161,7 +160,7 @@ def get_errors_for_n(random_walk, n, alpha_max, method, episodes=10):
 def errors_single_run(method):
     """10 arrays of errors for each n. Averaged over 19 states and 10 episodes"""
 
-    random_walk = gym.make('RandomWalk-v1', size=19)
+    random_walk = gym.make('RandomWalk-v0', size=19)
     errors_by_n = list()
     for n, alpha_max in zip(N_LIST, ALPHA_MAX_LIST):
         errors = get_errors_for_n(random_walk, n, alpha_max, method)
@@ -179,68 +178,31 @@ def average_over_runs(method, runs=100):
     return averaged_errors
 
 
-def td_error_episode_estimate(values, random_walk, n, alpha):
-    """n-step TD algorithm implementation, page 144. """
+def fig7_2():
 
-    t = 0
-    terminal_step = np.inf
-    td_error = np.zeros_like(values)
-
-    # Use dicts for state and reward sequences to keep indexes like in the book
-    state_seq, reward_seq = dict(), dict()
-
-    # No reward precedes S(0)
-    state_seq[t] = random_walk.state
-
-    # Episode starts from the central state
-    random_walk.reset()
-
-    tau = -n + 1
-    while tau != terminal_step - 1:
-
-        if t < terminal_step:
-            state_seq[t + 1], reward_seq[t + 1] = random_walk.step()
-            if state_seq[t + 1] in random_walk.terminal_states:
-                terminal_step = t + 1
-        tau = t - n + 1
-        if tau >= 0:
-            _return = sum(reward_seq[i] for i in range(tau + 1, min(tau + n, terminal_step) + 1))
-            if tau + n < terminal_step:
-                _return += values[state_seq[tau + n]]
-            td_error += alpha * (_return - values[state_seq[tau]])
-
-        t += 1
-    values += td_error
-
-    return values
-
-
-def exercise7_2():
     # This option is needed to get lower dispersion if run from Linux. Default for Windows 10 and MacOS.
     mp.set_start_method('spawn')
 
     runs = 100
 
-    errors_by_n1 = average_over_runs(td_error_episode_estimate, runs=runs)
-    errors_by_n2 = average_over_runs(td_nstep_episode_estimate, runs=runs)
+    errors_by_n = average_over_runs(td_nstep_episode_estimate, runs=runs)
+    for i, errors in enumerate(errors_by_n):
 
-    for i, (errors1, errors2) in enumerate(zip(errors_by_n1, errors_by_n2)):
         # Use Savitzky-Golay filter to smooth errors
-        errors_smooth1 = signal.savgol_filter(errors1, 19, 4)
-        errors_smooth2 = signal.savgol_filter(errors2, 19, 4)
-
+        errors_smooth = signal.savgol_filter(errors, 19, 4)
         alphas = np.linspace(0, ALPHA_MAX_LIST[i], ALPHA_SAMPLING_RATE)
-        plt.plot(alphas, errors_smooth1, label='TD error accumulate')
-        plt.plot(alphas, errors_smooth2, label='Each step update')
+        plt.plot(alphas, errors_smooth, label=f'n={N_LIST[i]}')
 
     plt.xticks(np.linspace(0, 1, 6))
     plt.xlabel(r'$\alpha$')
     plt.ylabel('Average RMS error over 19 states and first 10 episodes')
     plt.legend()
-    # plt.ylim(0.25, 0.55)
-    plt.show()
-    # plt.savefig('fig7_2.png')
+    plt.ylim(0.25, 0.55)
+    # plt.show()
+    plt.savefig('fig7_2.png')
 
 
 if __name__ == '__main__':
-    exercise7_2()
+    # fig7_2()
+    random_walk = gym.make('RandomWalk-v0', size=19)
+    print(random_walk.true_values)
