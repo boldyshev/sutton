@@ -31,3 +31,8 @@
 [fig6_3.py](fig6_3.py)
 
 ![fig6_3](figs/fig6-3.svg)
+
+# Figure 6.5
+[fig6_5.py](fig6_5.py)
+
+![fig6_5](figs/fig6-5.svg)
