@@ -72,6 +72,7 @@ def q_learning(a, episodes=300, alpha=0.1):
             next_state = TRANSITIONS[state][action]
             q[state][action] += alpha * (reward + max(q[next_state]) - q[state][action])
             state = next_state
+
     return left_actions_from_a
 
 
@@ -113,6 +114,7 @@ def double_q_learning(a, episodes=300, alpha=0.1, eps=0.1):
                 q2[state][action] += alpha * (reward + q1[next_state][next_action] - q2[state][action])
 
             state = next_state
+
     return left_actions_from_a
 
 
@@ -125,11 +127,13 @@ def fig6_5():
     workers = mp.cpu_count()
     print('Q-learning')
     q = np.array(process_map(q_learning, range(runs), max_workers=workers, chunksize=1)).mean(axis=0)
-    print(' Double Q-learning')
+
+    print('Double Q-learning')
     double_q = np.array(process_map(double_q_learning, range(runs), max_workers=workers, chunksize=1)).mean(axis=0)
 
-    plt.plot(q * 100)
-    plt.plot(double_q * 100)
+    plt.plot(q * 100, label='Q-learning')
+    plt.plot(double_q * 100, label='Double Q-learning')
+    plt.legend()
     plt.xlabel('Episodes')
     plt.ylabel('% left actions from A')
     plt.show()
