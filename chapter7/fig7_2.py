@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Figure 7.2, page 145"""
-# 1
 
 import multiprocessing as mp
 import pickle

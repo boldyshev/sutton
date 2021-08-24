@@ -181,7 +181,6 @@ def generate_episode(env, policy):
 
         state, crossed_finish = env.step(action)
 
-
     state_action_idx_sequence = state_action_idx_sequence
 
     t1 = time.perf_counter()

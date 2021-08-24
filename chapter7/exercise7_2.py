@@ -2,7 +2,6 @@
 """Exercise 7.2, page 143"""
 
 import multiprocessing as mp
-import pickle
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -233,7 +232,7 @@ def exercise7_2():
         plt.plot(alphas, errors_smooth1, label='TD error accumulate')
         plt.plot(alphas, errors_smooth2, label='Each step update')
 
-    plt.xticks(np.linspace(0, 1, 6))
+    # plt.xticks(np.linspace(0, 1, 6))
     plt.xlabel(r'$\alpha$')
     plt.ylabel('Average RMS error over 19 states and first 10 episodes')
     plt.legend()
