@@ -12,7 +12,7 @@ Chapters are added as I study the book.
 [YouTube: RL Course by David Silver](https://www.youtube.com/watch?v=2pWv7GOvuf0&list=PLqYmG7hTraZDM-OYHWgPebj2MfCFzFObQ) (DeepMind research group leader)
 
 [John Weatherwax solutions for the first edition](https://usermanual.wiki/Pdf/weatherwaxsuttonsolutionsmanual.504010221/view)
-(Check out his personal [webpage](https://waxworksmath.com/index.aspx). Solutions for a ton of math books. This man is a  monster)
+(Check out his personal [webpage](https://waxworksmath.com/index.aspx). Solutions for a ton of math books)
 
 #### Repos:
 
